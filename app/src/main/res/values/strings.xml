@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">XdaysOfCode</string>
+    <string name="client_id">bVMNQt62SE4bmjgZaba0wNW2xLZgkXsB</string>
+    <string name="auth0_domain">eddyspencer.auth0.com</string>
+    <string name="redirect_uri">https://xdaysofcode.firebaseapp.com/__/auth/handler</string>
+    <string name="client_secret">TT5JFISYpHpEBSRX3nfyUVQtcZZN1mcyak_N4d-mvRNK7vfwjYVvKPaj2_3zVaZZ</string>
+    <string name="sign_in_with_github">Sign in with GITHUB</string>
+</resources>

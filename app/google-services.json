@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "445480464142",
+    "firebase_url": "https://xdaysofcode.firebaseio.com",
+    "project_id": "xdaysofcode",
+    "storage_bucket": "xdaysofcode.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:445480464142:android:272dbf67022a7733",
+        "android_client_info": {
+          "package_name": "com.nezspencer.xdaysofcode"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "445480464142-qaon4hnk6cu4mue0g1qmf0b70b2uu7b9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nezspencer.xdaysofcode",
+            "certificate_hash": "fba18d75d530ce1fdaa22dcb9d03d4a1ba45aadc"
+          }
+        },
+        {
+          "client_id": "445480464142-fatredbq1mr33l27tp1giuj98ffhfnt8.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyABfJIp0eXJ03sBGnfQXZymodTCqKuHgQM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "445480464142-fatredbq1mr33l27tp1giuj98ffhfnt8.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
