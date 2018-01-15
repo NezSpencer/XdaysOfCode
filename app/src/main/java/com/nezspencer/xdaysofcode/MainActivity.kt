@@ -35,12 +35,16 @@ class MainActivity : AppCompatActivity() {
         firebaseAuth = FirebaseAuth.getInstance()
         binding.wvGithub.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
-                if (url!!.startsWith("xdaysofy://git.")){
+                Log.d(TAG,url)
+                if (!url!!.contains("?code=")) return false
+
+                if (url!!.startsWith("xdaysofcode.firebaseapp.com")){
                     val uri = Uri.parse(url)
                     val code = uri.getQueryParameter("code")
                     val state = uri.getQueryParameter("state")
 
                     getAccessToken(code,state)
+                    return true
                 }
                 return super.shouldOverrideUrlLoading(view, url)
             }
@@ -118,7 +122,7 @@ class MainActivity : AppCompatActivity() {
                 .addPathSegment("oauth")
                 .addPathSegment("authorize")
                 .addQueryParameter("client_id",getString(R.string.client_id))
-                //.addQueryParameter("redirect_uri",getString(R.string.redirect_uri))
+                .addQueryParameter("redirect_uri",getString(R.string.redirect_uri))
                 .addQueryParameter("state",randomString())
                 .addQueryParameter("scope","read:user")
                 .build()
