@@ -2,10 +2,13 @@ package com.nezspencer.xdaysofcode
 
 import android.databinding.DataBindingUtil
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.View
+import android.webkit.CookieManager
+import android.webkit.ValueCallback
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -15,10 +18,17 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GithubAuthProvider
 import com.nezspencer.xdaysofcode.databinding.ActivityMainBinding
-import okhttp3.*
-import java.io.IOException
+import okhttp3.HttpUrl
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.math.BigInteger
 import java.security.SecureRandom
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -33,20 +43,18 @@ class MainActivity : AppCompatActivity() {
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
         firebaseAuth = FirebaseAuth.getInstance()
+        binding.wvGithub.settings.javaScriptEnabled = true
         binding.wvGithub.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
                 Log.d(TAG,url)
-                if (!url!!.contains("?code=")) return false
-
-                if (url!!.startsWith("xdaysofcode.firebaseapp.com")){
-                    val uri = Uri.parse(url)
-                    val code = uri.getQueryParameter("code")
-                    val state = uri.getQueryParameter("state")
-
-                    getAccessToken(code,state)
+                if (url!!.startsWith("https://xdaysofcode.firebaseapp.com")){
+                    var code = Uri.parse(url).getQueryParameter("code")
+                    getAccessToken(code)
+                    Log.d(TAG,code)
                     return true
                 }
-                return super.shouldOverrideUrlLoading(view, url)
+
+                return false
             }
         }
         binding.btnGithubAuth.setOnClickListener { view: View -> authWithGithub() }
@@ -64,35 +72,26 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-    private fun getAccessToken(code: String, state: String) {
-        val okHttpClient = OkHttpClient()
-        val form = FormBody.Builder()
-                .add("client_id",getString(R.string.client_id))
-                .add("client_secret",getString(R.string.client_secret))
-                .add("code",code)
-                .add("state",state)
-                .add("redirect_uri",getString(R.string.redirect_uri))
-                .build()
-        val request = Request.Builder()
-                .url("https://github.com/login/oauth/access_token")
-                .post(form)
-                .build()
-        okHttpClient.newCall(request).enqueue(object: Callback {
-            override fun onFailure(call: Call?, e: IOException?) {
-                e!!.printStackTrace()
-                Toast.makeText(this@MainActivity,"Failure: ${e.toString()}"
-                        ,Toast.LENGTH_SHORT).show()
-            }
+    private fun getAccessToken(code: String) {
+        Retrofit.Builder()
+                .baseUrl(Constants.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(ScalarsConverterFactory.create())
+                .build().create(GithubApi::class.java).getAccessToken(AccessTokenBody(getString(R.string.client_id),
+                getString(R.string.client_secret),code,getString(R.string.redirect_uri)))
+                .enqueue(object : Callback<ResponseBody>{
+                    override fun onResponse(call: Call<ResponseBody>?, response: Response<ResponseBody>?) {
+                        val splitted = response!!.body()!!.string()
+                        Log.d(TAG,splitted)
+                        val b = splitted.split("[=&]".toRegex())[1]
+                        Log.d(TAG,"token is ${b}")
+                        firebaseAuthWithToken(b)
+                    }
 
-            override fun onResponse(call: Call?, response: Response?) {
-                //access_token=e72e16c7e42f292c6912e7710c838347ae178b4a&token_type=bearer
-                val responseString = response!!.body().toString()
-                val splitted = responseString.split("=|&")
-                if (splitted[0].equals("access_token",true))
-                    firebaseAuthWithToken(splitted[1])
-
-            }
-        })
+                    override fun onFailure(call: Call<ResponseBody>?, t: Throwable?) {
+                        Log.e(TAG,t.toString())
+                    }
+                })
     }
 
     private fun firebaseAuthWithToken(s: String) {
@@ -113,19 +112,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun authWithGithub() {
+        clearDataBeforeLaunch()
         binding.wvGithub.visibility = View.VISIBLE
-        binding.btnGithubAuth.visibility = View.GONE
         val httpUrl = HttpUrl.Builder()
-                .scheme("http")
+                .scheme("https")
                 .host("github.com")
                 .addPathSegment("login")
                 .addPathSegment("oauth")
                 .addPathSegment("authorize")
                 .addQueryParameter("client_id",getString(R.string.client_id))
-                .addQueryParameter("redirect_uri",getString(R.string.redirect_uri))
-                .addQueryParameter("state",randomString())
                 .addQueryParameter("scope","read:user")
                 .build()
+        binding.btnGithubAuth.visibility = View.GONE
 
         binding.wvGithub.loadUrl(httpUrl.toString())
     }
@@ -145,6 +143,20 @@ class MainActivity : AppCompatActivity() {
     companion object {
 
         private val TAG = MainActivity::class.java.simpleName
+    }
+
+    private fun clearDataBeforeLaunch() {
+        val cookieManager = CookieManager.getInstance()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.removeAllCookies(ValueCallback<Boolean> { aBoolean ->
+                // a callback which is executed when the cookies have been removed
+                Log.d(TAG, "Cookie removed: " + aBoolean!!)
+            })
+        } else {
+
+            cookieManager.removeAllCookie()
+        }
     }
 }
 
